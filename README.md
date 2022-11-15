@@ -6,7 +6,13 @@
 Entre los 32 estados que componen la República Mexicana hay una enorme diversidad. Algunos estados son más similares que otros: existen enormes brechas de desigualdad, diferentes estándares de seguridad y accesos a servicios básicos. ¿Cómo se vería entonces una foto de la República? ¿Quién se parece a quién? ¿Cómo es el nivel de vida en los estados? ¿Hay algún factor geográfico o cultural que haga a algunos estados distintos de otros? Estas son algunas de las preguntas que busca contestar nuestro proyecto, con miras a comprender la situación actual del país, y a construir alguna medida de “calidad de vida” para cada estado.
 
 ## Alcance
-Comprendemos que lo planteado anteriormente deja una ventana sumamente amplia, por lo que nos acotamos a una serie de variables e indicadores económicos (salarios mínimos, percepción de seguridad, etc.), para trabajar con aproximadamente 10-30 variables relevantes a nivel Estatal. Con estas buscamos resumir la situación del país, buscar países similares y finalmente generar algún tipo de índice de calidad de vida. 
+utilizamos el siguiente grupos de variables:
+- Variables demograficas
+- Variables ecomicas
+- variables de seguridad
+- variables de desarrollo socia 
+
+Con estas buscamos resumir la situación del país, buscar países similares y finalmente generar algún tipo de índice de calidad de vida. 
 
 ## Resultados
 
