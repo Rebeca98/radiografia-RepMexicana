@@ -1,0 +1,267 @@
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(MASS)
+library(skimr)
+```
+
+```{r setup, include=FALSE}
+delitos <- read.csv("delitos_por_estado.csv")
+```
+
+```{r}
+head(delitos)
+```
+# descripción de las variables:
+La descripción de los variables disponibles conforman el diccionario de datos que usualmente contiene los metadatos que describen las características relevantes de los datos.
+
+Esta tabla trae las carpetas de investigacion abiertas. Es la cnatidad de delitos desagregados por estado y tipo de delito. 
+
+Abuso.de.confianza: número de delitos clasificado como abuso de confianza
+
+
+## Algunas preguntas relevantes sobre los datos
+
+- ¿Cómo se distribuyen las variables? ¿Hay datos faltantes?
+- ¿Cuál es el promedio de los delitos por estado?
+- Hay relaciones entre tipos de delitos? R: parece que no.
+
+¿Hay alguna relación entre la edad de la madre o su peso y el peso de los bebés, o los nacimientos múltiples?
+¿Hay alguna relación entre la edad de la madre al momento del nacimiento y su nivel de escolaridad?
+¿cuál es el periodo promedio de gestación y cuál es su desviación estándar?
+¿En qué meses nacen más bebés? ¿Cómo se distribuye el número de nacimientos por mes? ¿por día de la semana?
+¿Hay alguna relación entre la edad de la madre o su edad y el score Apgar del bebé?
+¿Se puede predecir el peso del bebé de características como el periodo estimado de gestación y la ganancia en peso de la madre?
+¿Podemos identificar nacimientos que llevan a un score APGAR bajo? Por ejemplo, ¿la edad de la madre es un factor de riesgo?
+
+
+**herramientas de resumen numéricos y de visualización:**
+
+Análisis univariado para cada variable.
+Medidas multivariadas de centralidad.
+Medidas multivariadas de dispersión.
+Gráficas univariadas
+Gráficas multivariadas
+
+### Estadísticas sumarias
+Lo primero que podemos hacer es intentar conocer las variables que conforman la base de datos disponible. Podemos ver un resumen general de las variables. ¿Qué tipos de variables tenemos? ¿Cuáles son continuas, discretas, nominales, ordinales? ¿Qué variables tienen datos faltantes? ¿Cuántos casos tienen datos completos?
+```{r}
+summary(delitos)
+```
+## datos faltantes
+```{r}
+
+delitos %>% skim() # o skim(births2006.smpl)
+```
+- indica que no hay datos faltantes
+
+# agrupacion de variables
+```{r}
+delitos_general <- c("Contra las personas", "contra la sociedad")
+
+# contra las personas
+contra_vida <- c("Homicidio.culposo","Homicidio.doloso","Feminicidio")
+contra_integridad_corporal_psiquica <- c("Lesiones.culposas","Lesiones.dolosas","Otros.delitos.contra.la.vida.y.la.integridad.corporal")
+
+contra_libertad_fisica <- c("Secuestro","Trata.de.personas","Tráfico.de.menores","Rapto","Otros.delitos.que.atentan.contra.la.libertad.personal")
+contra_libertad_seguridad_sexual <- c("Violacion" ,"Abuso.sexual","Acoso.sexual","Incesto","Hostigamiento.sexual","Corrupción.de.menores","Otros.delitos.que.atentan.contra.la.libertad.y.la.seguridad.sexual")
+violencia_genero <- c("Violencia.de.género..excluyendo.violencia.familiar.")
+
+contra_seguridad_individual_privacidad <- c("Allanamiento.de.morada","Extorsión","Amenazas")
+contra_patrimonio <- c("Robo.a.casa.habitación"                                       ,"Robo.a.institución.bancaria","Robo.a.negocio","Robo.a.peatón",
+"Robo.a.transportista","Robo.de.autopartes" ,"Robo.de.ganado" ,"Robo.de.maquinaria" ,"Robo.de.vehículo.automotor","Robo.en.transporte.individual" ,"Robo.en.transporte.público","Otros.robos","Abuso.de.confianza","Fraude",
+"Daño.a.la.propiedad","Despojo","Otros.delitos.contra.el.patrimonio")
+
+contra_familia <- c("Violencia.familiar","Incumplimiento.de.obligaciones.de.asistencia.familiar","Otros.delitos.contra.la.familia" )
+
+otros_delitos_fuero <- c("Otros.delitos.del.fuero.común")
+
+#delitos contra la sociedad
+otros_contra_sociedad <- c("Otros.delitos.contra.la.sociedad" )
+contra_la_salud <- c("Narcomenudeo" )
+contra_la_seguridad_publica <- c("Falsificación")
+contra_equilibrio_ecologico <- c("Delitos.en.contra.del.medio.ambiente")
+
+# contra el estado
+cometidos_servidorespublicos<- c("Delitos.cometidos.por.servidores.públicos" )
+contra_correcto_funcionamiento_sistema_electoral <- c("Delitos.electorales")
+#contra_adecuada_procuracion_justicia <- c("Evasión.de.presos" )
+```
+
+# delitos contra el individuo
+```{r}
+delitos_contra_vida <- dplyr::select(delitos,all_of(c("estado","pop.total",contra_vida)))
+
+delitos_integridad_corporal_psiquica <- dplyr::select(delitos,all_of(c("estado","pop.total",contra_integridad_corporal_psiquica)))
+
+delitos_contra_libertad_fisica <- dplyr::select(delitos,all_of(c("estado","pop.total",contra_libertad_fisica)))
+
+delitos_contra_libertad_seguridad_sexual <- dplyr::select(delitos,all_of(c("estado","pop.total",contra_libertad_seguridad_sexual)))
+
+delitos_contra_familia <- 
+  dplyr::select(delitos,all_of(c("estado","pop.total",contra_familia)))
+
+delitos_contra_la_salud <- dplyr::select(delitos,all_of(c("estado","pop.total",contra_la_salud)))
+
+delitos_contra_equilibrio_ecologico <- dplyr::select(delitos,all_of(c("estado","pop.total",contra_equilibrio_ecologico)))
+
+delitos_cometidos_servidorespublicos <- dplyr::select(delitos, all_of(c("estado","pop.total",cometidos_servidorespublicos)))
+
+delitos_contra_correcto_funcionamiento_sistema_electoral <- 
+  dplyr::select(delitos,all_of(c("estado","pop.total",contra_correcto_funcionamiento_sistema_electoral)))
+```
+guradamos los datos
+```{r}
+write.csv(delitos_contra_libertad_seguridad_sexual,"data_transf/delitos_contra_libertad_seguridad_sexual.csv")
+write.csv(delitos_contra_vida,"data_transf/delitos_contra_vida.csv")
+write.csv(delitos_contra_libertad_fisica,"data_transf/delitos_contra_libertad_fisica.csv")
+write.csv(delitos_contra_familia,"data_transf/delitos_contra_familia.csv")
+write.csv(delitos_contra_la_salud ,"data_transf/delitos_contra_la_salud.csv")
+write.csv(delitos_contra_equilibrio_ecologico,"data_transf/delitos_contra_equilibrio_ecologico.csv")
+write.csv(delitos_cometidos_servidorespublicos,"data_transf/delitos_cometidos_servidorespublicos.csv")
+write.csv(delitos_contra_correcto_funcionamiento_sistema_electoral,"data_transf/delitos_contra_correcto_funcionamiento_sistema_electoral.csv")
+```
+
+Renombramos variables para graficar
+```{r}
+names(delitos_contra_libertad_seguridad_sexual) <- c("estado","violacion","abuso.sex","acoso.sex","incesto","hostig.sex","corr.menores","otros.lib.sexual")
+```
+
+```{r}
+M_sexuales <- cor(contra_libertad_seguridad_sexuals)
+corrplot(M_sexuales,type="upper",method="color",order="hclust",addCoef.col = "black")
+```
+
+contra la vida 
+```{r}
+delitos_contra_vida <- dplyr::select(delitos2,all_of(delitos_contra_vida))
+
+```
+
+```{r}
+M_vida <- cor(delitos_contra_vida)
+corrplot(M_vida,type="upper",method="color",order="hclust",addCoef.col = "black")
+```
+
+contra la integridad fisica
+```{r}
+contra_integridad_corporal_psiquica <- dplyr::select(delitos2,all_of(contra_integridad_corporal_psiquica))
+names(contra_integridad_corporal_psiquica) <- c("leiones.culp","lesiones.dol","otros")
+```
+```{r}
+M_fisica <- cor(contra_integridad_corporal_psiquica)
+corrplot(M_fisica,type="upper",method="color",order="hclust",addCoef.col = "black")
+```
+
+libertad fisica
+```{r}
+
+contra_libertad_fisica <- dplyr::select(delitos2,all_of(contra_libertad_fisica))
+names(contra_libertad_fisica) <- c("secuestro","trata.personas","trafico.men","rapto",
+                                   "otros")
+```
+```{r}
+M_libertad_fisica <- cor(contra_libertad_fisica)
+corrplot(M_libertad_fisica,type="upper",method="color",order="hclust",addCoef.col = "black")
+```
+
+```{r}
+
+contra_seguridad_individual_privacidad  <- dplyr::select(delitos2,all_of(contra_seguridad_individual_privacidad ))
+names(contra_seguridad_individual_privacidad) <- c("allanam.morada","extors.","amenazas")
+```
+```{r}
+M_seguridad_indiv <- cor(contra_libertad_fisica)
+corrplot(M_seguridad_indiv,type="upper",method="color",order="hclust",addCoef.col = "black")
+```
+
+contra el patrimonio
+```{r}
+contra_patrimonio <- dplyr::select(delitos2,all_of(contra_patrimonio))
+#names(contra_patrimonio) <- c("daño.propiedad","extors.","amenazas")
+```
+```{r}
+M_contra_patrimonio <- cor(contra_patrimonio)
+corrplot(M_contra_patrimonio,method="ellipse",order="hclust")
+```
+
+contra la familia
+
+```{r}
+contra_familia <- dplyr::select(delitos2,all_of(contra_familia))
+names(contra_familia) <- c("viol.familiar","incumpl.oblig.asist.familiar","otros")
+
+```
+```{r}
+M_contra_familia <- cor(contra_familia)
+corrplot(M_contra_familia,method="ellipse",order="hclust",tl.srt=45)
+```
+
+#delitos contra la sociedad
+```{r}
+otros_contra_sociedad<- dplyr::select(delitos2,all_of(otros_contra_sociedad))
+contra_la_salud<- dplyr::select(delitos2,all_of(contra_la_salud))
+```
+
+```{r}
+contra_la_seguridad_publica <- dplyr::select(delitos2,all_of(contra_la_seguridad_publica))
+contra_equilibrio_ecologico  <- dplyr::select(delitos2,all_of(contra_equilibrio_ecologico ))
+```
+# contra el estado
+```{r}
+delitos_contra_estado <- c(delitos_cometidos_servidorespublicos,contra_correcto_funcionamiento_sistema_electoral,contra_adecuada_procuracion_justicia)
+
+delitos_contra_estado <- dplyr::select(delitos2,all_of(delitos_contra_estado))
+names(delitos_contra_estado) <- c("delitos.cometido.serv.pub","delitos.electorales","evasion.presos")
+```
+geompoint 
+```{r}
+delitos <- delitos %>% mutate(prop.Abuso.sexual = (delitos$Abuso.sexual/delitos$pop.total)*100000)
+```
+
+```{r}
+g1 <- delitos %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Abuso.sexual),x =prop.Abuso.sexual))+
+            geom_bar(stat='identity', color='gray', fill='red') +
+            labs(y="Estados", x="número de delitos por cada cien mil habitantes")+ggtitle("Abuso Sexual")
+#geom_point(color="red",fill="red",size=1)+ scale_fill_manual(aesthetics = "fill")
+```
+
+# Box plots
+con los boxplots podemos ver la distribucion a nivel nacional
+```{r}
+ggplot(data = delitos, aes(y = 	Corrupción.de.menores)) + 
+  geom_boxplot() + 
+  scale_x_discrete() +
+  labs(title = "	Corrupción.de.menores",
+       y = "	Corrupción.de.menores") + coord_flip()
+
+
+
+```
+
+```{r}
+boxplot(delitos$Abuso.de.confianza, delitos$Abuso.sexual, delitos$Amenazas,
+        main = "Swiss Socio-Economic Indicator",
+        names = c("Agriculture", "Examination", "Catholic"),
+        ylab = "Percentages")
+```
+
+## Gráficas multivariadas
+
+correlación
+```{r}
+#delitos %>% select(.,-estado)
+delitos2 <- dplyr::select(delitos,-estado)
+```
+
+
+# Clusters
+
+Clusters por estado en temas de delitos contra el individuo
+
+

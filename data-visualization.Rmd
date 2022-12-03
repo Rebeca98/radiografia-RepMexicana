@@ -1,0 +1,619 @@
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(MASS)
+library(skimr)
+library(ggpubr)
+library('sf')
+library(RColorBrewer)
+```
+
+```{r setup, include=FALSE}
+delitos_contra_libertad_seguridad_sexual <- read.csv("data_transf/delitos_contra_libertad_seguridad_sexual.csv")
+delitos_contra_vida <- read.csv("data_transf/delitos_contra_vida.csv")
+delitos_contra_libertad_fisica <- read.csv("data_transf/delitos_contra_libertad_fisica.csv")
+delitos_contra_vida <- read.csv("data_transf/delitos_contra_vida.csv")
+delitos_contra_patrimonio <- read.csv("data_transf/delitos_contra_patrimonio.csv")
+delitos_contra_la_salud <- read.csv("data_transf/delitos_contra_la_salud.csv")
+delitos_cometidos_servidorespublicos <- read.csv("data_transf/delitos_cometidos_servidorespublicos.csv")
+delitos_contra_correcto_funcionamiento_sistema_electoral <- read.csv("data_transf/delitos_contra_correcto_funcionamiento_sistema_electoral.csv")
+delitos_contra_medio_ambiente <- read.csv("data_transf/delitos_contra_equilibrio_ecologico.csv")
+```
+
+```{r}
+transform(delitos_contra_vida, pop.total)
+```
+
+geompoint 
+```{r}
+delitos_contra_libertad_seguridad_sexual <- delitos_contra_libertad_seguridad_sexual %>% 
+  mutate(prop.Abuso.sexual = (Abuso.sexual/pop.total)*100000,
+         prop.Violacion = (Violacion/pop.total)*100000,
+         prop.Acoso.sexual = (Acoso.sexual/pop.total)*100000,
+         prop.Incesto = (Incesto/pop.total)*100000,
+         prop.Hostigamiento.sexual = (Hostigamiento.sexual/pop.total)*100000,
+         prop.Corrupción.de.menores = (Corrupción.de.menores/pop.total)*100000
+         )
+```
+
+```{r}
+g1 <- delitos_contra_libertad_seguridad_sexual %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Abuso.sexual),x =prop.Abuso.sexual))+
+            geom_bar(stat='identity', color='gray', fill='red') +
+            labs(y="Estados", x="número de delitos por cada cien mil habitantes")+ggtitle("Abuso Sexual")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+
+g2 <- delitos_contra_libertad_seguridad_sexual %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Violacion),x =prop.Violacion))+
+            geom_bar(stat='identity', color='gray', fill='red') +
+            labs(y="Estados", x="número de delitos por cada cien mil habitantes")+ggtitle("Violación")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+
+g3 <- delitos_contra_libertad_seguridad_sexual %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Acoso.sexual),x =prop.Acoso.sexual))+
+            geom_bar(stat='identity', color='gray', fill='red') +
+            labs(y="Estados", x="número de delitos por cada cien mil habitantes")+ggtitle("Acoso Sexual")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+
+g4 <- delitos_contra_libertad_seguridad_sexual %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Hostigamiento.sexual),x =prop.Hostigamiento.sexual))+
+            geom_bar(stat='identity', color='gray', fill='red') +
+            labs(y="Estados", x="número de delitos por cada cien mil habitantes")+ggtitle("Hostigamiento Sexual")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+
+g5 <- delitos_contra_libertad_seguridad_sexual %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Corrupción.de.menores),x =prop.Corrupción.de.menores))+
+            geom_bar(stat='identity', color='gray', fill='red') +
+            labs(y="Estados", x="número de delitos por cada cien mil habitantes")+ggtitle("Corrupción de Menores")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+
+```{r}
+ggsave(
+  filename="plots/abuso_sexual.png",
+  plot = g1
+)
+ggsave(
+  filename="plots/violacion.png",
+  plot = g2
+)
+ggsave(
+  filename="plots/acoso.png",
+  plot = g3
+)
+ggsave(
+  filename="plots/hostig.png",
+  plot = g4
+)
+ggsave(
+  filename="plots/corrup_menores.png",
+  plot = g5
+)
+```
+
+# delitos contra la vida
+esta grafica va a ser muy buena para delitos contra la vida
+
+```{r}
+delitos_contra_vida <- delitos_contra_vida %>% 
+  dplyr::mutate(prop.Homicidio.doloso = (Homicidio.doloso/pop.total)*100000,
+         prop.Homicidio.culposo = (Homicidio.culposo/pop.total)*100000,
+         prop.Feminicidio = (Feminicidio/pop.total)*1000,
+         )
+```
+
+```{r}
+dumbbell <- function(v1, v2, group = rep(1, length(v1)), labels = NULL,
+                     segments = FALSE, text = FALSE, pch = 19,
+                     colv1 = 1, colv2 = 1, pt.cex = 1, segcol = 1,
+                     lwd = 1,cex = 0.6, ...) {
+
+  o <- sort.list(as.numeric(group), decreasing = TRUE)
+  group <- group[o]
+  offset <- cumsum(c(0, diff(as.numeric(group)) != 0))
+  y <- 1L:length(v1) + 2 * offset
+  
+  dotchart(v1, labels = labels, color = colv1, xlim = range(v1, v2) + c(-2, 2),groups = group, pch = pch, pt.cex = pt.cex, cex = cex,main = "Homicidio doloso y culposo en México", legend=legend("bottomright", 
+  legend = c("Homicidio doloso", "Homicidio culposo"), 
+  col = c("blue","black"), 
+  pch = c(19,19), 
+  bty = "n", 
+  pt.cex = 0.8, 
+  cex = 0.8, 
+  text.col = "black", 
+  horiz = T , 
+  title = 'tipo de homicidio',
+  inset = c(0.01, 0.01)))
+  
+  if(segments == TRUE) {
+    for(i in 1:length(v1)) {
+      segments(min(v2[i], v1[i]), y[i],
+               max(v2[i], v1[i]), y[i],
+               lwd = lwd, col = segcol) 
+    }
+  }
+  
+  for(i in 1:length(v1)){
+    points(v2[i], y[i], pch = pch, cex = pt.cex, col = colv2)
+    points(v1[i], y[i], pch = pch, cex = pt.cex, col = colv1)
+  }
+  
+  if(text == TRUE) {
+    for(i in 1:length(v1)) {
+      text(min(v2[i ], v1[i]) - 1.5, y[i],
+           labels = min(v2[i], v1[i]))
+      text(max(v2[i], v1[i]) + 1.5, y[i],
+           labels = max(v2[i], v1[i])) 
+    }
+  }
+}
+```
+
+```{r}
+data <- delitos_contra_vida
+gh1 <- dumbbell(v1 = data$prop.Homicidio.doloso, v2 = data$prop.Homicidio.culposo, text = FALSE,
+         labels = data$estado, segments = TRUE, pch = 19,
+         pt.cex = 0.5, colv1 = 1, colv2 = "blue")
+```
+
+```{r}
+gf <- delitos_contra_vida %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.Feminicidio),x =prop.Feminicidio))+
+            geom_bar(stat='identity', color='#F2B8C6', fill='#FC94AF') +
+            labs(y="Estados", x="número de feminicidios por cada cien mil habitantes")+ggtitle("Feminicidio")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+```{r}
+ggsave(
+  filename="plots/feminicidio.png",
+  plot = gf
+)
+```
+
+mapa con homiciods y feminicidios
+
+```{r}
+if (!require("devtools")) {
+    install.packages("devtools")
+}
+devtools::install_github("diegovalle/mxmaps")
+```
+
+
+```{r}
+library(mxmaps)
+library(ggplot2)
+
+```
+
+```{r}
+
+diccionario <- dplyr::select(AGEEML_202211202159971,c("CVE_ENT","NOM_ENT"))
+```
+
+```{r}
+estado <- unique(c(diccionario[,'NOM_ENT']))
+clave <- unique(c(diccionario[,'CVE_ENT']))
+clave_num <- c('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32')
+```
+
+```{r}
+diccionario <- data.frame(estado,clave,clave_num)
+
+```
+
+```{r}
+delitos_contra_vida <- merge(diccionario,delitos_contra_vida, by="estado")
+```
+
+```{r}
+summary(delitos_contra_vida)
+```
+
+
+
+```{r}
+newData <- delitos_contra_vida %>% mutate(y=case_when(prop.Feminicidio <= 0.011165 ~ 0.25,
+                                           prop.Feminicidio <= 0.015170 ~ 0.50,
+                                           prop.Feminicidio >= 0.015170 ~ 0.75
+                                           ))
+```
+
+```{r}
+new2 <- dplyr::select(newData,c('estado','clave_num','y'))
+```
+
+```{r}
+obtain_value <- function(estado_clave){
+  #values <- new2 %>% filter(clave_num == clave)
+  #value <- values$y[1]
+  #return(value)
+  val <- new2 %>% filter(clave_num == estado_clave) %>% summarise(y)
+  val$y[1]
+}
+```
+
+
+
+merge dataframe with data and lat and long
+```{r}
+mapa <- mxmaps::mxstate.map
+mapa <- mapa %>% rename(estado=region)
+```
+
+```{r}
+mapa <- mapa %>% mutate(y=case_when(
+                      estado == '01' ~ obtain_value('01'),
+                      estado == '02' ~ obtain_value('02'),
+                      estado == '03' ~ obtain_value('03'),
+                      estado == '04' ~ obtain_value('04'),
+                      estado == '05' ~ obtain_value('05'),
+                      estado == '06' ~ obtain_value('06'),
+                      estado == '07' ~ obtain_value('07'),
+                      estado == '08' ~ obtain_value('08'),
+                      estado == '09' ~ obtain_value('09'),
+                      estado == '10' ~ obtain_value('10'),
+                      estado == '11' ~ obtain_value('11'),
+                      estado == '12' ~ obtain_value('12'),
+                      estado == '13' ~ obtain_value('13'),
+                      estado == '14' ~ obtain_value('14'),
+                      estado == '15' ~ obtain_value('15'),
+                      estado == '16' ~ obtain_value('16'),
+                      estado == '17' ~ obtain_value('17'),
+                      estado == '18' ~ obtain_value('18'),
+                      estado == '19' ~ obtain_value('19'),
+                      estado == '20' ~ obtain_value('20'),
+                      estado == '21' ~ obtain_value('21'),
+                      estado == '22' ~ obtain_value('22'),
+                      estado == '23' ~ obtain_value('23'),
+                      estado == '24' ~ obtain_value('24'),
+                      estado == '25' ~ obtain_value('25'),
+                      estado == '26' ~ obtain_value('26'),
+                      estado == '27' ~ obtain_value('27'),
+                      estado == '28' ~ obtain_value('28'),
+                      estado == '29' ~ obtain_value('29'),
+                      estado == '30' ~ obtain_value('30'),
+                      estado == '31' ~ obtain_value('31'),
+                      estado == '32' ~ obtain_value('32')))
+```
+
+
+
+
+```{r}
+mapa_feminicidios <- ggplot(mapa,aes(long,lat,group=group, fill=factor(y)))+
+  geom_polygon(colour="grey") + coord_quickmap() +scale_fill_manual("tasa de feminicios", values = brewer.pal(5, "RdPu"))+ ggtitle("Feminicidios")+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+ggsave(
+  filename="plots/mapa_feminicidios.png",
+  plot = g5
+)
+```
+
+# libertad fisica
+```{r}
+#contra_libertad_fisica <- dplyr::select(delitos2,all_of(contra_libertad_fisica))
+
+delitos_contra_libertad_fisica <- dplyr::select(delitos_contra_libertad_fisica,-c("X"))
+names(delitos_contra_libertad_fisica ) <- c("estado","pop.total","secuestro","trata.personas","trafico.menores","rapto","otros.delitos.contra.libertad")
+```
+
+```{r}
+delitos_contra_libertad_fisica <- delitos_contra_libertad_fisica %>% 
+  mutate(prop.secuestro = (secuestro/pop.total)*1000,
+         prop.trata.personas = (trata.personas/pop.total)*1000,
+         prop.trafico.menores = (trafico.menores/pop.total)*1000,
+         prop.rapto = (rapto/pop.total)*1000,
+         prop.otros.delitos.contra.libertad= (otros.delitos.contra.libertad/pop.total)*1000
+         )
+```
+
+
+```{r}
+gl_sec<- delitos_contra_libertad_fisica %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,secuestro),x =prop.secuestro))+
+            geom_bar(stat='identity', color='gray', fill='#4682B4') +
+            labs(y="Estados", x="número de delitos por cada mil habitantes")+ggtitle("Secuestro")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+```{r}
+gl_trata<- delitos_contra_libertad_fisica %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.trata.personas),x =prop.trata.personas))+
+            geom_bar(stat='identity', color='gray', fill='#4682B4') +
+            labs(y="Estados", x="número de delitos por cada mil habitantes")+ggtitle("Trata de personas")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+```{r}
+gl_trafico<- delitos_contra_libertad_fisica %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.trafico.menores),x =prop.trafico.menores))+
+            geom_bar(stat='identity', color='gray', fill='#4682B4') +
+            labs(y="Estados", x="número de delitos por cada mil habitantes")+ggtitle("Tráfico de menores")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+```{r}
+gl_trata<- delitos_contra_libertad_fisica %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.trata.personas),x =prop.trata.personas))+
+            geom_bar(stat='identity', color='gray', fill='#4682B4') +
+            labs(y="Estados", x="número de delitos por cada mil habitantes")+ggtitle("Trata de personas")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+```{r}
+gl_otros<- delitos_contra_libertad_fisica %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,prop.otros.delitos.contra.libertad),x =prop.otros.delitos.contra.libertad))+
+            geom_bar(stat='identity', color='gray', fill='#4682B4') +
+            labs(y="Estados", x="número de delitos por cada mil habitantes")+ggtitle("Otros delitos con tra la libertad física")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+# delitos contra el patrimonio
+```{r}
+delitos_contra_patrimonio <- dplyr::select(delitos_contra_patrimonio,-c("X"))
+#names(delitos_contra_libertad_fisica ) <- c("estado","pop.total","secuestro","trata.personas","trafico.menores","rapto","otros.delitos.contra.libertad")
+```
+
+tipos de robo por estado
+
+```{r}
+robos <- dplyr::select(delitos_contra_patrimonio, -c("Abuso.de.confianza","Daño.a.la.propiedad","Otros.delitos.contra.el.patrimonio",
+                                              "Fraude","Despojo"))
+```
+
+```{r}
+create_plot_robos <- function(estado){
+  d <- robos %>% filter(estado == estado)
+  d <- dplyr::select(d,-c("estado", "pop.total"))
+  data <- d %>% pivot_longer(cols= colnames(d), names_to='delitos',values_to='values')
+  data <- data %>% 
+    mutate(name=fct_reorder(delitos,desc(values))) %>%
+    #arrange(desc(delitos)) %>%
+    mutate(prop = values / sum(data$values) *100) %>%
+    mutate(ypos = cumsum(prop)- 0.5*prop )
+  g <- ggplot(data=data, aes(x=name, y=values, fill=delitos)) +geom_bar(stat = "identity") +   theme(axis.text.x = element_blank()) + labs(title=paste("Robos en ",estado), y="número de robos",x="delitos")
+  ggsave(
+  filename=paste("plots/robos",estado,".png"),
+  plot = g
+)
+  return(g)
+}
+```
+
+```{r}
+create_plot_robos('Colima')
+```
+
+tipos de robo a nivel nacional
+
+# delitos contra el medio ambiente
+
+```{r}
+delitos_contra_medio_ambiente <- dplyr::select(delitos_contra_medio_ambiente, -c("X"))
+names(delitos_contra_medio_ambiente) <- c("estado","pop.total","delitos.contra.medio.ambiente")
+```
+
+```{r}
+delitos_contra_medio_ambiente_g <- delitos_contra_medio_ambiente %>% filter(delitos.contra.medio.ambiente > 0)
+```
+
+```{r}
+gl_salud<- delitos_contra_medio_ambiente_g %>% group_by(estado)%>% 
+            ggplot(aes(y=reorder(estado,delitos.contra.medio.ambiente),x =delitos.contra.medio.ambiente))+
+            geom_bar(stat='identity', color='#075C27', fill='#0DBB4F') +
+            labs(y="Estados", x="número de delitos por cada mil habitantes")+ggtitle("Delitos contra el medio ambiente")+theme(axis.text=element_text(size=7),
+        axis.title=element_text(size=9,face="bold"))
+```
+
+```{r}
+
+```
+
+
+# Box plots
+con los boxplots podemos ver la distribucion a nivel nacional
+```{r}
+ggplot(data = delitos, aes(y = 	Corrupción.de.menores)) + 
+  geom_boxplot() + 
+  scale_x_discrete() +
+  labs(title = "	Corrupción.de.menores",
+       y = "	Corrupción.de.menores") + coord_flip()
+```
+
+```{r}
+boxplot(delitos$Abuso.de.confianza, delitos$Abuso.sexual, delitos$Amenazas,
+        main = "Swiss Socio-Economic Indicator",
+        names = c("Agriculture", "Examination", "Catholic"),
+        ylab = "Percentages")
+```
+
+## Gráficas multivariadas
+
+correlación
+```{r}
+#delitos %>% select(.,-estado)
+delitos2 <- dplyr::select(delitos,-estado)
+```
+
+
+# Clusters
+```{r}
+library(cluster)
+library(factoextra) # visualización de funciones
+library(tidyverse)
+library(corrplot)  #matrices de correlación
+```
+
+```{r}
+cluster_delitos_libertad_sexual <- dplyr::select(delitos_contra_libertad_seguridad_sexual,c(
+  "estado","prop.Abuso.sexual","prop.Violacion",
+  "prop.Acoso.sexual", "prop.Hostigamiento.sexual","prop.Corrupción.de.menores"))
+
+row.names(cluster_delitos_libertad_sexual) <- cluster_delitos_libertad_sexual$estado
+cluster_delitos_libertad_sexual <- dplyr::select(cluster_delitos_libertad_sexual, -c("estado"))
+
+H1  <-  dplyr::select(delitos_contra_libertad_seguridad_sexual,c( "prop.Abuso.sexual","prop.Violacion",
+  "prop.Acoso.sexual", "prop.Hostigamiento.sexual","prop.Corrupción.de.menores"))
+```
+
+Cuando los atributos tienen diferentes magnitudes, es recomendable estandarizar los datos.
+```{r}
+#enigh20 <- scale(enigh20)
+```
+
+`nstart` indica cuántos conjuntos aleatorios deben tomarse, cuando se provee un número de centros (clusters).
+```{r}
+set.seed(10)
+km1 <- kmeans(cluster_delitos_libertad_sexual, centers = 5, nstart = 50)
+```
+
+
+
+
+```{r}
+fviz_cluster(km1, 
+             data = H1, 
+             ellipse.type = "euclid", 
+             star.plot = F, 
+             repel = T,
+             ggtheme = theme(legend.position = "bottom"))
+```
+```{r}
+e2 <- enigh20[sample(1:33,33,replace = F),]
+set.seed(10) # fija la semilla por reproducibilidad
+km1 <- kmeans(e2,centers = 4, nstart = 50)
+km1
+fviz_cluster(km1, 
+             data = e2, 
+             ellipse.type = "euclid", 
+             star.plot = T, 
+             repel = T,
+             ggtheme = theme(legend.position = "bottom"))
+``` 
+
+```{r}
+describe.by(enigh20,) 
+```
+
+
+
+Clusters por estado en temas de delitos contra el individuo
+
+
+```{r}
+# if there are more than two dimensiones (varaibles) fzviz_cluster will perform principal componente analysis and plot the data points according to first two components that will explain the majorty of variance.
+fviz_cluster(km1, 
+             data = cluster_delitos_libertad_sexual, 
+             ellipse.type = "euclid", 
+             star.plot = F, 
+             repel = T,
+             ggtheme = theme(legend.position = "bottom"))
+```
+
+```{r}
+e2 <- enigh20[sample(1:33,33,replace = F),]
+set.seed(10) # fija la semilla por reproducibilidad
+km1 <- kmeans(e2,centers = 4, nstart = 50)
+km1
+fviz_cluster(km1, 
+             data = e2, 
+             ellipse.type = "euclid", 
+             star.plot = T, 
+             repel = T,
+             ggtheme = theme(legend.position = "bottom"))
+```
+
+No buscamos hacer un estudio que explique las causas de la violencia, los delitos, la pobreza; buscamos mostrar el momento en el que se encuentra México. 
+
+Determinar una segmentación de las mujeres mexicanas, basada en las creencias, valores y actitudes -para cada grupo- que más influyen en que se embaracen durante la adolescencia. Esto, con el propósito de construir estrategias futuras, específicas para cada segmento, que aporten en la prevención del embarazo adolescente, de forma eficiente.
+
+De qué estados se forman los clusters
+
+```{r}
+H1 <- cluster_delitos_libertad_sexual
+```
+
+
+```{r}
+sort(table(), decreasing = T)
+sort(round(table(cluster_delitos_libertad_sexual[which(km1$cluster==2)])/nrow(cluster_delitos_libertad_sexual$estado)*100,2), decreasing = T)
+sort(round(table(cluster_delitos_libertad_sexual[which(km1$cluster==3)])/nrow(cluster_delitos_libertad_sexual$estado)*100,2), decreasing = T)
+```
+
+```{r}
+cluster_delitos_libertad_sexual['ind'] = 1:32
+```
+
+```{r}
+values_1 <- as.tibble(which(km1$cluster==1))$value
+values_2 <- as.tibble(which(km1$cluster==2))$value
+values_3 <- as.tibble(which(km1$cluster==3))$value
+values_4 <- as.tibble(which(km1$cluster==4))$value
+values_5 <- as.tibble(which(km1$cluster==5))$value
+```
+
+
+```{r}
+estados_cluster1 <- rownames(filter(cluster_delitos_libertad_sexual,ind %in% values_1))
+estados_cluster2 <- rownames(filter(cluster_delitos_libertad_sexual,ind %in% values_2))
+estados_cluster3 <- rownames(filter(cluster_delitos_libertad_sexual,ind %in% values_3))
+estados_cluster4 <- rownames(filter(cluster_delitos_libertad_sexual,ind %in% values_4))
+estados_cluster5 <- rownames(filter(cluster_delitos_libertad_sexual,ind %in% values_5))
+```
+
+podemos comparar los resultados de clasificacion con los datos originales
+
+```{r}
+plot(cluster_delitos_libertad_sexual$prop.Abuso.sexual,cluster_delitos_libertad_sexual$prop.Hostigamiento.sexual, col=km1$cluster)
+points(km1$centers[,c("prop.Abuso.sexual","prop.Hostigamiento.sexual")], col=1:5, pch=16, cex=2)
+```
+ clusters compared wtih the original variables.
+```{r}
+library(ggrepel)
+df <- cluster_delitos_libertad_sexual |>
+  as_tibble() |>
+  mutate(cluster=km1$cluster,
+         state=row.names(cluster_delitos_libertad_sexual)) 
+p <- df |> ggplot(aes(prop.Abuso.sexual,prop.Violacion, color=factor(cluster), label=state))+ xlim(-20,60)
+
+p1 <- p + geom_text_repel(max.overlaps=50) + labs(title="g")
+```
+
+```{r}
+p1
+```
+```{r}
+calculate_silloute <- function(df){
+  wss <- function(k){
+      kmeans(df,k,nstart=42)$tot.withinss
+    }
+  k.values <- 1:15
+  #extract wass for 2-15 clusters
+  wss_values <- map_dbl(k.values, wss)
+  return(wss_values)
+}
+
+```
+
+```{r}
+wss_values <-  calculate_silloute(cluster_delitos_libertad_sexual)
+```
+
+```{r}
+plot(k.values, wss_values, type="b", pch=19,frame=FALSE, xlab = "number of clusters K", 
+     ylab="total within-clusters sum of squares")
+```
+```{r}
+fviz_nbclust(cluster_delitos_libertad_sexual,kmeans, method="wss")
+```
+
